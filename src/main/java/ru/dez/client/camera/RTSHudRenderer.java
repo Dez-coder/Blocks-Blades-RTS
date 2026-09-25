@@ -43,6 +43,20 @@ public class RTSHudRenderer {
     private static final int BTN = 28;
     private static final int GAP = 32;
 
+    /**
+     * Hand-drawn 16x16 HUD sprites stored under
+     * {@code assets/blocks_blades/hud/}. They replace the old item-stack icons
+     * on the build / task / profession / town-hall buttons.
+     */
+    private static final ResourceLocation SPRITE_BUILD = new ResourceLocation("blocks_blades", "hud/build.png");
+    private static final ResourceLocation SPRITE_TASKS = new ResourceLocation("blocks_blades", "hud/tasks.png");
+    private static final ResourceLocation SPRITE_PROF = new ResourceLocation("blocks_blades", "hud/prof.png");
+    private static final ResourceLocation SPRITE_LEVELUP = new ResourceLocation("blocks_blades", "hud/levelup.png");
+    private static final ResourceLocation SPRITE_TASK_BUILD = new ResourceLocation("blocks_blades", "hud/cbuild.png");
+    private static final ResourceLocation SPRITE_TASK_HUNT = new ResourceLocation("blocks_blades", "hud/chunt.png");
+    private static final ResourceLocation SPRITE_TASK_MINE = new ResourceLocation("blocks_blades", "hud/cmine.png");
+    private static final ResourceLocation SPRITE_TASK_TREE = new ResourceLocation("blocks_blades", "hud/ctree.png");
+
     @SubscribeEvent
     public static void onRenderGui(RenderGuiEvent.Post event) {
         if (!RTSCameraManager.isEnabled()) {
@@ -320,7 +334,7 @@ public class RTSHudRenderer {
         boolean hovered = RTSClientState.professionButton.contains(mouse.x, mouse.y);
 
         drawStyledButton(graphics, x, y, size, size, hovered, RTSClientState.professionPanelOpen);
-        graphics.renderItem(new ItemStack(Items.NAME_TAG), x + 6, y + 6);
+        drawHudSprite(graphics, SPRITE_PROF, x + 6, y + 6, 16);
     }
 
     /**
@@ -496,7 +510,7 @@ public class RTSHudRenderer {
         boolean hovered = rect.contains(mouse.x, mouse.y);
 
         drawStyledButton(graphics, x, y, BTN, BTN, hovered, RTSTaskClient.taskPanelOpen);
-        graphics.renderItem(new ItemStack(Items.MAP), x + 6, y + 6);
+        drawHudSprite(graphics, SPRITE_TASKS, x + 6, y + 6, 16);
 
         RTSTaskClient.taskButtons.add(rect);
         RTSTaskClient.taskActions.add("toggle_task");
@@ -515,7 +529,7 @@ public class RTSHudRenderer {
         boolean hovered = RTSBuildClient.buildMenuButton.contains(mouse.x, mouse.y);
 
         drawStyledButton(graphics, x, y, BTN, BTN, hovered, RTSBuildClient.buildPanelOpen);
-        graphics.renderItem(new ItemStack(Items.BRICK), x + 6, y + 6);
+        drawHudSprite(graphics, SPRITE_BUILD, x + 6, y + 6, 16);
 
         if (hovered) {
             pendingTooltip = () -> drawLabelTooltip(graphics, mc, x, y, "Строительство");
@@ -526,10 +540,10 @@ public class RTSHudRenderer {
         int x = width - COL_TASK;
         int baseY = 8 + GAP;
 
-        drawTaskButton(graphics, mc, mouse, x, baseY, Items.WOODEN_PICKAXE, "mine_menu", RTSTaskClient.miningPanelOpen);
-        drawTaskButton(graphics, mc, mouse, x, baseY + GAP, Items.OAK_LOG, "auto_wood", false);
-        drawTaskButton(graphics, mc, mouse, x, baseY + GAP * 2, Items.BRICK, "build_task", false);
-        drawTaskButton(graphics, mc, mouse, x, baseY + GAP * 3, Items.BOW, "auto_hunt", false);
+        drawTaskButton(graphics, mc, mouse, x, baseY, SPRITE_TASK_MINE, "mine_menu", RTSTaskClient.miningPanelOpen);
+        drawTaskButton(graphics, mc, mouse, x, baseY + GAP, SPRITE_TASK_TREE, "auto_wood", false);
+        drawTaskButton(graphics, mc, mouse, x, baseY + GAP * 2, SPRITE_TASK_BUILD, "build_task", false);
+        drawTaskButton(graphics, mc, mouse, x, baseY + GAP * 3, SPRITE_TASK_HUNT, "auto_hunt", false);
 
         // Everything else opens below in the same column, so the task panel can
         // never overlap the build panel column.
@@ -605,7 +619,7 @@ public class RTSHudRenderer {
         boolean affordable = RTSBuildClient.canAfford(next);
 
         drawStyledButton(graphics, x, y, size, size, hovered, false);
-        graphics.renderItem(new ItemStack(Items.EMERALD_BLOCK), x + 6, y + 6);
+        drawHudSprite(graphics, SPRITE_LEVELUP, x + 6, y + 6, 16);
         graphics.renderOutline(x, y, size, size, affordable
                 ? lerpColor(0xDD00E676, 0xFFFFD54F, pulse(2.5F))
                 : 0xFFFFC107);
@@ -736,6 +750,26 @@ public class RTSHudRenderer {
 
         drawStyledButton(graphics, x, y, BTN, BTN, hovered, active);
         graphics.renderItem(new ItemStack(item), x + 6, y + 6);
+
+        RTSTaskClient.taskButtons.add(rect);
+        RTSTaskClient.taskActions.add(action);
+
+        if (hovered) {
+            pendingTooltip = () -> drawLabelTooltip(graphics, mc, x, y, getTaskLabel(action));
+        }
+    }
+
+    /**
+     * Variant of {@link #drawTaskButton} that draws one of the hand-drawn
+     * sprites instead of an item-stack icon.
+     */
+    private static void drawTaskButton(GuiGraphics graphics, Minecraft mc, Vector2d mouse, int x, int y,
+                                       ResourceLocation sprite, String action, boolean active) {
+        RTSClientState.Rect rect = new RTSClientState.Rect(x, y, BTN, BTN);
+        boolean hovered = rect.contains(mouse.x, mouse.y);
+
+        drawStyledButton(graphics, x, y, BTN, BTN, hovered, active);
+        drawHudSprite(graphics, sprite, x + 6, y + 6, 16);
 
         RTSTaskClient.taskButtons.add(rect);
         RTSTaskClient.taskActions.add(action);
@@ -1056,6 +1090,15 @@ public class RTSHudRenderer {
         int target = active ? 0xFFFFC107 : 0xFF7CFFB2;
         graphics.renderOutline(x, y, w, h,
                 lerpColor(0xDD00E676, target, hovered || active ? pulse(4.0F) : 0.35F));
+    }
+
+    /**
+     * Draws one of the hand-drawn 16x16 HUD sprites at the given position,
+     * scaling the full texture to {@code size x size} pixels. The sprites are
+     * pixel art, so a 16px size keeps them crisp (no blurry rescaling).
+     */
+    private static void drawHudSprite(GuiGraphics graphics, ResourceLocation sprite, int x, int y, int size) {
+        graphics.blit(sprite, x, y, size, size, 0.0F, 0.0F, 16, 16, 16, 16);
     }
 
     private static Item getProfessionIcon(LivingEntity unit) {
