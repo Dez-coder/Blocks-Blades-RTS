@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "ru.dez.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "mixins.blocks_blades.refmap.json",
+  "mixins": [
+    "VillagerAiMixin",
+    "VillagerProfessionMixin",
+    "VillagerHostilesSensorMixin"
+  ],
+  "client": [
+    "CameraMixin",
+    "MouseHandlerMixin"
+  ]
+}

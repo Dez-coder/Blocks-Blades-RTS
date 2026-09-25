@@ -1,0 +1,39 @@
+# --- Gradle ---
+.gradle/
+build/
+out/
+
+# --- IDE ---
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.classpath
+.project
+.settings/
+bin/
+
+# --- Minecraft / Forge dev environment ---
+run/
+run-data/
+eclipse/
+src/generated/
+
+# --- Logs and crash reports ---
+logs/
+crash-reports/
+*.log
+*.log.gz
+
+# --- World saves and personal data (never publish these) ---
+saves/
+usercache.json
+usernamecache.json
+options.txt
+servers.dat
+
+# --- OS junk ---
+Thumbs.db
+desktop.ini
+.DS_Store
